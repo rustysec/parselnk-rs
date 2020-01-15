@@ -1,5 +1,6 @@
 parselnk
 ========
+[![Build Status](https://github.com/rustysec/parselnk-rs/workflows/Build/badge.svg)](https://github.com/rustysec/parselnk-rs/actions)
 
 Parse Windows `.lnk` files in pure Rust!
 
