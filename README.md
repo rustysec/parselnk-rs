@@ -41,7 +41,6 @@ parselnk = { version = "0.1", default-features = false }
 ```
 
 - `chrono` - exposes convenience methods for parsing windows `FileTime` structures
-- `serde` - enables serialization of `parselnk` types
 
 ## Helping Out
 Issues and pull requests are welcome!
