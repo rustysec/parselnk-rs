@@ -81,4 +81,8 @@ pub enum ExtraDataError {
     /// An error occurred while reading the data
     #[error("could not read extra data: {0}")]
     Read(#[from] std::io::Error),
+
+    /// An extra block of unknown size or signature was encountered
+    #[error("unknown extra block: size: {0}, signature: {1}")]
+    UnknownBlock(u32, u32),
 }

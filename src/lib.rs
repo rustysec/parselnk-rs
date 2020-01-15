@@ -113,6 +113,39 @@ impl Lnk {
     pub fn description(&self) -> Option<String> {
         self.string_data.name_string.clone()
     }
+
+    /// The creation `FileTime` as a u64
+    pub fn creation_time(&self) -> u64 {
+        self.header.creation_time
+    }
+
+    /// The access `FileTime` as a u64
+    pub fn access_time(&self) -> u64 {
+        self.header.access_time
+    }
+
+    /// The write `FileTime` as a u64
+    pub fn write_time(&self) -> u64 {
+        self.header.write_time
+    }
+
+    /// The creation `FileTime` as a `DateTime`
+    #[cfg(feature = "chrono")]
+    pub fn created_on(&self) -> Option<chrono::DateTime<chrono::Utc>> {
+        self.header.created_on.clone()
+    }
+
+    /// The access `FileTime` as a `DateTime`
+    #[cfg(feature = "chrono")]
+    pub fn accessed_on(&self) -> Option<chrono::DateTime<chrono::Utc>> {
+        self.header.accessed_on.clone()
+    }
+
+    /// The write `FileTime` as a `DateTime`
+    #[cfg(feature = "chrono")]
+    pub fn modified_on(&self) -> Option<chrono::DateTime<chrono::Utc>> {
+        self.header.modified_on.clone()
+    }
 }
 
 impl TryFrom<&std::path::Path> for Lnk {

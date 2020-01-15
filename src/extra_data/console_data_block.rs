@@ -1,10 +1,11 @@
+use super::Result;
 use crate::error::ExtraDataError;
 use bitflags::bitflags;
 use byteorder::{ReadBytesExt, LE};
-use std::convert::TryFrom;
 use std::io::{Cursor, Read};
 
 /// The ConsoleDataBlock structure specifies the display settings to use when a link target specifies an application that is run in a console window.
+#[derive(Clone, Debug, Default)]
 pub struct ConsoleDataBlock {
     /// A 32-bit, unsigned integer that specifies the size of the ConsoleDataBlock
     /// structure. This value MUST be 0x000000CC.
@@ -148,6 +149,7 @@ bitflags! {
     /// A 16-bit, unsigned integer that specifies the fill attributes that control the
     /// foreground and background text colors in the console window. The following bit definitions can be
     /// combined to specify 16 different values each for the foreground and background colors:
+    #[derive(Default)]
     pub struct FileAttributes: u16 {
         /// The foreground text color contains blue.
         const FOREGROUND_BLUE = 0x0001;
@@ -179,6 +181,7 @@ bitflags! {
     /// A 32-bit, unsigned integer that specifies the family of the font used in the
     /// console window. This value MUST be comprised of a font family and a font pitch. The values for
     /// the font family are shown in the following table:
+    #[derive(Default)]
     pub struct FontFamily: u32 {
         /// The font family is unknown.
         const FF_DONTCARE = 0x0000;
@@ -215,50 +218,53 @@ bitflags! {
     }
 }
 
-impl TryFrom<&mut Cursor<Vec<u8>>> for ConsoleDataBlock {
-    type Error = ExtraDataError;
-
-    fn try_from(cursor: &mut Cursor<Vec<u8>>) -> std::result::Result<Self, Self::Error> {
+impl ConsoleDataBlock {
+    /// Construct a new `ConsoleDataBlock`
+    pub(crate) fn new(
+        block_size: u32,
+        block_signature: u32,
+        cursor: &mut Cursor<Vec<u8>>,
+    ) -> Result<Self> {
         let cdb = ConsoleDataBlock {
-            block_size: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
-            block_signature: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
+            block_size,
+            block_signature,
             file_attributes: FileAttributes::from_bits_truncate(
-                cursor.read_u16::<LE>().map_err(Self::Error::Read)?,
+                cursor.read_u16::<LE>().map_err(ExtraDataError::Read)?,
             ),
-            popup_file_attributes: cursor.read_u16::<LE>().map_err(Self::Error::Read)?,
-            screen_buffer_size_x: cursor.read_u16::<LE>().map_err(Self::Error::Read)?,
-            screen_buffer_size_y: cursor.read_u16::<LE>().map_err(Self::Error::Read)?,
-            window_size_x: cursor.read_u16::<LE>().map_err(Self::Error::Read)?,
-            window_size_y: cursor.read_u16::<LE>().map_err(Self::Error::Read)?,
-            window_origin_x: cursor.read_u16::<LE>().map_err(Self::Error::Read)?,
-            window_origin_y: cursor.read_u16::<LE>().map_err(Self::Error::Read)?,
-            _unused_1: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
-            _unused_2: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
-            font_size: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
+            popup_file_attributes: cursor.read_u16::<LE>().map_err(ExtraDataError::Read)?,
+            screen_buffer_size_x: cursor.read_u16::<LE>().map_err(ExtraDataError::Read)?,
+            screen_buffer_size_y: cursor.read_u16::<LE>().map_err(ExtraDataError::Read)?,
+            window_size_x: cursor.read_u16::<LE>().map_err(ExtraDataError::Read)?,
+            window_size_y: cursor.read_u16::<LE>().map_err(ExtraDataError::Read)?,
+            window_origin_x: cursor.read_u16::<LE>().map_err(ExtraDataError::Read)?,
+            window_origin_y: cursor.read_u16::<LE>().map_err(ExtraDataError::Read)?,
+            _unused_1: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
+            _unused_2: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
+            font_size: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
             font_family: FontFamily::from_bits_truncate(
-                cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
+                cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
             ),
-            font_weight: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
+            font_weight: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
             face_name: {
                 let mut face_name = [0u8; 64];
                 cursor
                     .read_exact(&mut face_name)
-                    .map_err(Self::Error::Read)?;
+                    .map_err(ExtraDataError::Read)?;
                 face_name.to_vec()
             },
-            cursor_size: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
-            full_screen: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
-            quick_edit: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
-            insert_mode: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
-            auto_position: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
-            history_buffer_size: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
-            number_of_history_buffers: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
-            history_no_dup: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
+            cursor_size: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
+            full_screen: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
+            quick_edit: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
+            insert_mode: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
+            auto_position: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
+            history_buffer_size: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
+            number_of_history_buffers: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
+            history_no_dup: cursor.read_u32::<LE>().map_err(ExtraDataError::Read)?,
             color_table: {
                 let mut face_name = [0u8; 64];
                 cursor
                     .read_exact(&mut face_name)
-                    .map_err(Self::Error::Read)?;
+                    .map_err(ExtraDataError::Read)?;
                 face_name.to_vec()
             },
         };
