@@ -29,7 +29,7 @@ pub struct LinkInfo {
     /// Flags that specify whether the VolumeID, LocalBasePath,
     /// LocalBasePathUnicode, and CommonNetworkRelativeLink fields are present in this
     /// structure.
-    link_info_flags: Option<LinkInfoFlags>,
+    pub link_info_flags: Option<LinkInfoFlags>,
 
     /// A 32-bit, unsigned integer that specifies the location of the VolumeID
     /// field. If the VolumeIDAndLocalBasePath flag is set, this value is an offset, in bytes, from the

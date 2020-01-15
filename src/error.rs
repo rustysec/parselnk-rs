@@ -85,4 +85,12 @@ pub enum ExtraDataError {
     /// An extra block of unknown size or signature was encountered
     #[error("unknown extra block: size: {0}, signature: {1}")]
     UnknownBlock(u32, u32),
+
+    /// Converting unicode string failed
+    #[error("error converting unicode string: {0}")]
+    WideStringConversion(#[from] std::string::FromUtf16Error),
+
+    /// String data is not available for this property
+    #[error("missing string data")]
+    MissingStringData,
 }

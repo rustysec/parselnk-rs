@@ -49,12 +49,23 @@ pub type Result<T> = std::result::Result<T, error::Error>;
 /// Represents a windows .lnk file
 #[derive(Clone, Debug)]
 pub struct Lnk {
+    /// Path to the `.lnk` file
     path: Option<PathBuf>,
-    header: ShellLinkHeader,
-    string_data: StringData,
-    link_target_id_list: LinkTargetIdList,
-    link_info: LinkInfo,
-    extra_data: ExtraData,
+
+    /// The ShellLinkHeader structure contains identification information, timestamps, and flags that specify the presence of optional structures, including LinkTargetIDList (section 2.2), LinkInfo (section 2.3), and StringData (section 2.4).
+    pub header: ShellLinkHeader,
+
+    /// StringData refers to a set of structures that convey user interface and path identification information. The presence of these optional structures is controlled by LinkFlags (section 2.1.1) in the ShellLinkHeader (section 2.1).
+    pub string_data: StringData,
+
+    /// The LinkTargetIDList structure specifies the target of the link. The presence of this optional structure is specified by the HasLinkTargetIDList bit (LinkFlags section 2.1.1) in the ShellLinkHeader (section 2.1).
+    pub link_target_id_list: LinkTargetIdList,
+
+    /// The LinkInfo structure specifies information necessary to resolve a link target if it is not found in its original location. This includes information about the volume that the target was stored on, the mapped drive letter, and a Universal Naming Convention (UNC) form of the path if one existed when the link was created. For more details about UNC paths, see [MS-DFSNM] section 2.2.1.4.:w
+    pub link_info: LinkInfo,
+
+    /// ExtraData refers to a set of structures that convey additional information about a link target. These optional structures can be present in an extra data section that is appended to the basic Shell Link Binary File Format.
+    pub extra_data: ExtraData,
 }
 
 impl Lnk {

@@ -37,4 +37,20 @@ impl ShimDataBlock {
 
         Ok(this)
     }
+
+    /// Convert `layer_name` into human readable string
+    pub fn to_string(&self) -> Result<String> {
+        if let Some(ref layer_name) = self.layer_name {
+            let data = layer_name
+                .chunks_exact(2)
+                .map(|chunk| u16::from_ne_bytes([chunk[0], chunk[1]]))
+                .collect::<Vec<u16>>();
+
+            widestring::U16Str::from_slice(&data)
+                .to_string()
+                .map_err(ExtraDataError::WideStringConversion)
+        } else {
+            Err(ExtraDataError::MissingStringData)
+        }
+    }
 }
