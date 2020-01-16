@@ -91,7 +91,7 @@ pub enum ExtraDataError {
     Read(#[from] std::io::Error),
 
     /// An extra block of unknown size or signature was encountered
-    #[error("unknown extra block: size: {0}, signature: {1}")]
+    #[error("unknown extra block: size: 0x{0:08x}, signature: 0x{1:08x}")]
     UnknownBlock(u32, u32),
 
     /// Converting unicode string failed

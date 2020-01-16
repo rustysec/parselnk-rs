@@ -194,3 +194,34 @@ impl TryFrom<&Vec<u8>> for Lnk {
         Lnk::new(&mut &p[0..])
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::Lnk;
+    use std::convert::TryFrom;
+    use std::path::Path;
+
+    #[test]
+    fn firefox() {
+        let path = Path::new("./test_data/firefox.lnk");
+        assert!(Lnk::try_from(path).is_ok());
+    }
+
+    #[test]
+    fn commander() {
+        let path = Path::new("./test_data/commander.lnk");
+        assert!(Lnk::try_from(path).is_ok());
+    }
+
+    #[test]
+    fn notepad() {
+        let path = Path::new("./test_data/notepad.lnk");
+        assert!(Lnk::try_from(path).is_ok());
+    }
+
+    #[test]
+    fn xp_outlook_express() {
+        let path = Path::new("./test_data/outlook_express.lnk");
+        assert!(Lnk::try_from(path).is_ok());
+    }
+}

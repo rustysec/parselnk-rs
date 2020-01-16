@@ -16,8 +16,7 @@ pub struct ShellLinkHeader {
     /// The size, in bytes, of this structure. This value MUST be 0x0000004C.
     pub header_size: u32,
 
-    /// A class identifier (CLSID). This value MUST be 00021401-0000-0000-
-    /// C000-000000000046.
+    /// A class identifier (CLSID). This value MUST be 00021401-0000-0000-C000-000000000046.
     pub link_clsid: u128,
 
     /// A LinkFlags structure (section 2.1.1) that specifies information about the shell
