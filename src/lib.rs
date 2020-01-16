@@ -143,19 +143,19 @@ impl Lnk {
     /// The creation `FileTime` as a `DateTime`
     #[cfg(feature = "chrono")]
     pub fn created_on(&self) -> Option<chrono::DateTime<chrono::Utc>> {
-        self.header.created_on.clone()
+        self.header.created_on
     }
 
     /// The access `FileTime` as a `DateTime`
     #[cfg(feature = "chrono")]
     pub fn accessed_on(&self) -> Option<chrono::DateTime<chrono::Utc>> {
-        self.header.accessed_on.clone()
+        self.header.accessed_on
     }
 
     /// The write `FileTime` as a `DateTime`
     #[cfg(feature = "chrono")]
     pub fn modified_on(&self) -> Option<chrono::DateTime<chrono::Utc>> {
-        self.header.modified_on.clone()
+        self.header.modified_on
     }
 }
 

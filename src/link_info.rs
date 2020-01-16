@@ -151,12 +151,12 @@ impl LinkInfo {
 
             if let Some(ref link_info_flags) = this.link_info_flags {
                 if link_info_flags.contains(LinkInfoFlags::VOLUME_ID_AND_LOCAL_BASE_PATH) {
-                    this.local_base_path = this.read_local_base_path(cursor, link_info_flags);
+                    this.local_base_path = this.read_local_base_path(cursor, *link_info_flags);
                     this.common_path_suffix = this.read_common_path_suffix(cursor);
                     this.local_base_path_unicode =
-                        this.read_local_base_path_unicode(cursor, link_info_flags);
+                        this.read_local_base_path_unicode(cursor, *link_info_flags);
                     this.common_path_suffix_unicode =
-                        this.read_common_path_suffix_unicode(cursor, link_info_flags);
+                        this.read_common_path_suffix_unicode(cursor, *link_info_flags);
 
                     // TODO: Parse `VolumeID` structure
                 }
@@ -179,7 +179,7 @@ impl LinkInfo {
     fn read_local_base_path(
         &self,
         cursor: &mut Cursor<Vec<u8>>,
-        link_info_flags: &LinkInfoFlags,
+        link_info_flags: LinkInfoFlags,
     ) -> Option<String> {
         let start_pos = cursor.position();
         let end_pos = if link_info_flags
@@ -213,7 +213,7 @@ impl LinkInfo {
     fn read_local_base_path_unicode(
         &self,
         cursor: &mut Cursor<Vec<u8>>,
-        _link_info_flags: &LinkInfoFlags,
+        _link_info_flags: LinkInfoFlags,
     ) -> Option<String> {
         if self.link_info_header_size >= 0x0000_0024 {
             let start_pos = cursor.position();
@@ -231,7 +231,7 @@ impl LinkInfo {
     fn read_common_path_suffix_unicode(
         &self,
         cursor: &mut Cursor<Vec<u8>>,
-        _link_info_flags: &LinkInfoFlags,
+        _link_info_flags: LinkInfoFlags,
     ) -> Option<String> {
         if self.link_info_header_size >= 0x0000_0024 {
             let start_pos = cursor.position();
