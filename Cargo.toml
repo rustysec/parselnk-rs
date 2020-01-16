@@ -10,6 +10,10 @@ readme = "README.md"
 homepage = "https://github.com/rustysec/parselnk-rs"
 documentation = "https://docs.rs/parselnk"
 keywords = ["windows", "lnk", "link"]
+exclude = [
+    ".github/*",
+    "test_data/*"
+]
 
 [dependencies]
 bitflags = "1"
