@@ -53,6 +53,14 @@ pub enum LinkInfoError {
     /// An error occurred while reading the data
     #[error("could not read link info data: {0}")]
     Read(#[from] std::io::Error),
+
+    /// An error occurred while converting string data
+    #[error("could not convert data to string: {0}")]
+    StringConversion(std::string::FromUtf8Error),
+
+    /// An error occurred while converting string data
+    #[error("could not convert data to wide string: {0}")]
+    WideStringConversion(std::string::FromUtf16Error),
 }
 
 #[derive(Debug, Error)]

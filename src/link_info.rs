@@ -3,10 +3,11 @@
 //! type.
 //!
 
-use crate::{error::LinkInfoError, header::ShellLinkHeader, LinkFlags, Result};
+use super::Result;
+use crate::{error::LinkInfoError, header::ShellLinkHeader, LinkFlags};
 use bitflags::bitflags;
 use byteorder::{ReadBytesExt, LE};
-use std::io::Cursor;
+use std::io::{Cursor, Read};
 
 #[derive(Clone, Debug, Default)]
 /// The LinkInfo structure specifies information necessary to resolve a link target if it is not found in its
@@ -68,7 +69,7 @@ pub struct LinkInfo {
     /// An optional VolumeID structure (section 2.3.1) that specifies information
     /// about the volume that the link target was on when the link was created. This field is present if
     /// the VolumeIDAndLocalBasePath flag is set.
-    pub volume_id: Option<String>,
+    pub volume_id: Option<()>,
 
     /// An optional, NULL–terminated string, defined by the system default code
     /// page, which is used to construct the full path to the link item or link target by appending the
@@ -79,7 +80,7 @@ pub struct LinkInfo {
     /// An optional CommonNetworkRelativeLink structure
     /// (section 2.3.2) that specifies information about the network location where the link target is
     /// stored.
-    pub common_network_relative_link: Option<String>,
+    pub common_network_relative_link: Option<()>,
 
     /// A NULL–terminated string, defined by the system default code
     /// page, which is used to construct the full path to the link item or link target by being appended to
@@ -119,9 +120,9 @@ impl LinkInfo {
     /// Construct a new `LinkInfo` from the data in `cursor`
     pub fn new(cursor: &mut Cursor<Vec<u8>>, header: &ShellLinkHeader) -> Result<Self> {
         if header.link_flags.contains(LinkFlags::HAS_LINK_INFO) {
-            let current_pos = cursor.position();
+            let start_pos = cursor.position();
 
-            let this = Self {
+            let mut this = Self {
                 link_info_size: cursor.read_u32::<LE>().map_err(LinkInfoError::Read)?,
                 link_info_header_size: cursor.read_u32::<LE>().map_err(LinkInfoError::Read)?,
                 link_info_flags: Some(LinkInfoFlags::from_bits_truncate(
@@ -146,12 +147,140 @@ impl LinkInfo {
                 local_base_path_unicode: None,
                 common_path_suffix_unicode: None,
             };
+            cursor.set_position(start_pos);
 
-            cursor.set_position(this.link_info_size as u64 + current_pos);
+            if let Some(ref link_info_flags) = this.link_info_flags {
+                if link_info_flags.contains(LinkInfoFlags::VOLUME_ID_AND_LOCAL_BASE_PATH) {
+                    this.local_base_path = this.read_local_base_path(cursor, link_info_flags);
+                    this.common_path_suffix = this.read_common_path_suffix(cursor);
+                    this.local_base_path_unicode =
+                        this.read_local_base_path_unicode(cursor, link_info_flags);
+                    this.common_path_suffix_unicode =
+                        this.read_common_path_suffix_unicode(cursor, link_info_flags);
+
+                    // TODO: Parse `VolumeID` structure
+                }
+
+                if link_info_flags
+                    .contains(LinkInfoFlags::COMMON_NETWORK_RELATIVE_LINK_AND_PATH_SUFFIX)
+                {
+                    // TODO: Parse `CommonNetworkRelativeLink` structure
+                }
+            }
+
+            cursor.set_position(this.link_info_size as u64 + start_pos);
 
             Ok(this)
         } else {
             Ok(Default::default())
         }
+    }
+
+    fn read_local_base_path(
+        &self,
+        cursor: &mut Cursor<Vec<u8>>,
+        link_info_flags: &LinkInfoFlags,
+    ) -> Option<String> {
+        let start_pos = cursor.position();
+        let end_pos = if link_info_flags
+            .contains(LinkInfoFlags::COMMON_NETWORK_RELATIVE_LINK_AND_PATH_SUFFIX)
+        {
+            self.common_network_relative_link_offset as u64 + start_pos
+        } else {
+            self.common_path_suffix_offset as u64 + start_pos
+        } - 1;
+
+        let begin = start_pos + self.local_base_path_offset as u64;
+
+        Self::read_string(cursor, begin, end_pos - begin).ok()
+    }
+
+    fn read_common_path_suffix(&self, cursor: &mut Cursor<Vec<u8>>) -> Option<String> {
+        let start_pos = cursor.position();
+
+        let end_pos = if self.link_info_header_size >= 0x0000_0024 {
+            self.local_base_path_offset_unicode as u64
+        } else {
+            self.link_info_size as u64
+        } + start_pos
+            - 1;
+
+        let begin = start_pos + self.common_path_suffix_offset as u64;
+
+        Self::read_string(cursor, begin, end_pos - begin).ok()
+    }
+
+    fn read_local_base_path_unicode(
+        &self,
+        cursor: &mut Cursor<Vec<u8>>,
+        _link_info_flags: &LinkInfoFlags,
+    ) -> Option<String> {
+        if self.link_info_header_size >= 0x0000_0024 {
+            let start_pos = cursor.position();
+
+            let end_pos = self.common_path_suffix_offset_unicode as u64 + start_pos - 1;
+
+            let begin = start_pos + self.local_base_path_offset as u64;
+
+            Self::read_widestring(cursor, begin, end_pos - begin).ok()
+        } else {
+            None
+        }
+    }
+
+    fn read_common_path_suffix_unicode(
+        &self,
+        cursor: &mut Cursor<Vec<u8>>,
+        _link_info_flags: &LinkInfoFlags,
+    ) -> Option<String> {
+        if self.link_info_header_size >= 0x0000_0024 {
+            let start_pos = cursor.position();
+
+            let end_pos = self.link_info_size as u64 + start_pos - 1;
+
+            let begin = start_pos + self.common_path_suffix_offset_unicode as u64;
+
+            Self::read_widestring(cursor, begin, end_pos - begin).ok()
+        } else {
+            None
+        }
+    }
+
+    fn read_widestring(
+        cursor: &mut Cursor<Vec<u8>>,
+        from: u64,
+        size: u64,
+    ) -> std::result::Result<String, LinkInfoError> {
+        let reset = cursor.position();
+        let mut data = vec![0; size as usize];
+
+        cursor.set_position(from);
+        cursor.read_exact(&mut data).map_err(LinkInfoError::Read)?;
+        cursor.set_position(reset);
+
+        let wide_data = data
+            .chunks_exact(2)
+            .map(|chunks| u16::from_ne_bytes([chunks[0], chunks[1]]))
+            .collect::<Vec<u16>>();
+
+        let wide = widestring::U16Str::from_slice(&wide_data).to_ustring();
+
+        wide.to_string()
+            .map_err(LinkInfoError::WideStringConversion)
+    }
+
+    fn read_string(
+        cursor: &mut Cursor<Vec<u8>>,
+        from: u64,
+        size: u64,
+    ) -> std::result::Result<String, LinkInfoError> {
+        let reset = cursor.position();
+        let mut data = vec![0; size as usize];
+
+        cursor.set_position(from);
+        cursor.read_exact(&mut data).map_err(LinkInfoError::Read)?;
+        cursor.set_position(reset);
+
+        String::from_utf8(data).map_err(LinkInfoError::StringConversion)
     }
 }
