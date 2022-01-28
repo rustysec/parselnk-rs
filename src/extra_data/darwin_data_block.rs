@@ -5,6 +5,7 @@ use std::convert::TryFrom;
 use std::io::{Cursor, Read};
 
 #[derive(Clone, Debug, Default)]
+#[allow(dead_code)]
 /// The DarwinDataBlock structure specifies an application identifier that can be used instead of a link target IDList to install an application when a shell link is activated.
 pub struct DarwinDataBlock {
     block_size: u32,
@@ -47,10 +48,11 @@ impl TryFrom<&mut Cursor<Vec<u8>>> for DarwinDataBlock {
     type Error = ExtraDataError;
 
     fn try_from(cursor: &mut Cursor<Vec<u8>>) -> std::result::Result<Self, Self::Error> {
-        let mut this = Self::default();
-
-        this.block_size = cursor.read_u32::<LE>().map_err(Self::Error::Read)?;
-        this.block_signature = cursor.read_u32::<LE>().map_err(Self::Error::Read)?;
+        let this = Self {
+            block_size: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
+            block_signature: cursor.read_u32::<LE>().map_err(Self::Error::Read)?,
+            ..Default::default()
+        };
 
         Ok(this)
     }

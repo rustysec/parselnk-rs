@@ -35,6 +35,7 @@ pub struct LinkInfo {
     /// A 32-bit, unsigned integer that specifies the location of the VolumeID
     /// field. If the VolumeIDAndLocalBasePath flag is set, this value is an offset, in bytes, from the
     /// start of the LinkInfo structure; otherwise, this value MUST be zero.
+    #[allow(dead_code)]
     volume_id_offset: u32,
 
     /// A 32-bit, unsigned integer that specifies the location of the
@@ -192,7 +193,11 @@ impl LinkInfo {
 
         let begin = start_pos + self.local_base_path_offset as u64;
 
-        Self::read_string(cursor, begin, end_pos - begin).ok()
+        if end_pos > begin {
+            Self::read_string(cursor, begin, end_pos - begin).ok()
+        } else {
+            None
+        }
     }
 
     fn read_common_path_suffix(&self, cursor: &mut Cursor<Vec<u8>>) -> Option<String> {
