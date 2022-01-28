@@ -215,7 +215,7 @@ impl LinkInfo {
         if end_pos > begin {
             Self::read_string(cursor, begin, end_pos - begin).ok()
         } else {
-            NOne
+            None
         }
     }
 
