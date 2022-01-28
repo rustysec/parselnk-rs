@@ -212,7 +212,11 @@ impl LinkInfo {
 
         let begin = start_pos + self.common_path_suffix_offset as u64;
 
-        Self::read_string(cursor, begin, end_pos - begin).ok()
+        if end_pos > begin {
+            Self::read_string(cursor, begin, end_pos - begin).ok()
+        } else {
+            NOne
+        }
     }
 
     fn read_local_base_path_unicode(
@@ -227,7 +231,11 @@ impl LinkInfo {
 
             let begin = start_pos + self.local_base_path_offset as u64;
 
-            Self::read_widestring(cursor, begin, end_pos - begin).ok()
+            if end_pos > begin {
+                Self::read_widestring(cursor, begin, end_pos - begin).ok()
+            } else {
+                None
+            }
         } else {
             None
         }
@@ -245,7 +253,11 @@ impl LinkInfo {
 
             let begin = start_pos + self.common_path_suffix_offset_unicode as u64;
 
-            Self::read_widestring(cursor, begin, end_pos - begin).ok()
+            if end_pos > begin {
+                Self::read_widestring(cursor, begin, end_pos - begin).ok()
+            } else {
+                None
+            }
         } else {
             None
         }
