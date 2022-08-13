@@ -1,6 +1,5 @@
 use parselnk;
-use std::convert::TryFrom;
-use std::path::Path;
+use std::{convert::TryFrom, path::Path};
 
 fn main() {
     let path = std::env::args()
