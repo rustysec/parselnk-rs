@@ -39,8 +39,10 @@ pub use extra_data::*;
 pub use header::*;
 pub use link_info::*;
 pub use link_target_id_list::*;
-use std::convert::TryFrom;
-use std::path::PathBuf;
+use std::{
+    convert::TryFrom,
+    path::{Path, PathBuf},
+};
 pub use string_data::*;
 
 /// Result type wrapping around `parselnk::error::Error`
@@ -159,15 +161,22 @@ impl Lnk {
     }
 }
 
-impl TryFrom<&std::path::Path> for Lnk {
+impl TryFrom<&Path> for Lnk {
     type Error = crate::error::Error;
 
-    fn try_from(p: &std::path::Path) -> std::result::Result<Self, Self::Error> {
+    fn try_from(p: &Path) -> std::result::Result<Self, Self::Error> {
         let mut f = std::fs::File::open(p).map_err(crate::error::Error::from)?;
         Lnk::new(&mut f).map(|mut lnk| {
             lnk.path = Some(p.to_path_buf());
             lnk
         })
+    }
+}
+impl TryFrom<PathBuf> for Lnk {
+    type Error = crate::error::Error;
+
+    fn try_from(p: PathBuf) -> std::result::Result<Self, Self::Error> {
+        Self::try_from(p.as_path())
     }
 }
 
@@ -183,7 +192,7 @@ impl TryFrom<Vec<u8>> for Lnk {
     type Error = crate::error::Error;
 
     fn try_from(p: Vec<u8>) -> std::result::Result<Self, Self::Error> {
-        Lnk::new(&mut &p[0..])
+        Lnk::new(&mut p.as_slice())
     }
 }
 
@@ -191,7 +200,7 @@ impl TryFrom<&Vec<u8>> for Lnk {
     type Error = crate::error::Error;
 
     fn try_from(p: &Vec<u8>) -> std::result::Result<Self, Self::Error> {
-        Lnk::new(&mut &p[0..])
+        Lnk::new(&mut p.as_slice())
     }
 }
 

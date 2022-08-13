@@ -60,7 +60,7 @@ pub enum LinkInfoError {
 
     /// An error occurred while converting string data
     #[error("could not convert data to wide string: {0}")]
-    WideStringConversion(std::string::FromUtf16Error),
+    WideStringConversion(widestring::error::Utf16Error),
 }
 
 #[derive(Debug, Error)]
@@ -72,7 +72,7 @@ pub enum StringDataError {
 
     /// Unable to convert `StringData` element to a `WideString`
     #[error("string conversion failed: {0}")]
-    WideStringConversion(#[from] std::string::FromUtf16Error),
+    WideStringConversion(#[from] widestring::error::Utf16Error),
 
     /// Unable to convert `StringData` element to a `String`
     #[error("string conversion failed: {0}")]
@@ -80,7 +80,7 @@ pub enum StringDataError {
 
     /// Unable to read string data into `WideString`
     #[error("string conversion failed: {0}")]
-    WideStringRead(#[from] widestring::MissingNulError<u16>),
+    WideStringRead(#[from] widestring::error::NulError<u16>),
 }
 
 #[derive(Debug, Error)]
@@ -96,7 +96,7 @@ pub enum ExtraDataError {
 
     /// Converting unicode string failed
     #[error("error converting unicode string: {0}")]
-    WideStringConversion(#[from] std::string::FromUtf16Error),
+    WideStringConversion(#[from] widestring::error::Utf16Error),
 
     /// String data is not available for this property
     #[error("missing string data")]

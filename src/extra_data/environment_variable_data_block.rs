@@ -1,6 +1,7 @@
 use super::Result;
 use crate::error::ExtraDataError;
 use std::io::{Cursor, Read};
+use widestring::{U16Str, U16String};
 
 /// The EnvironmentVariableDataBlock structure specifies a path to environment variable information when the link target refers to a location that has a corresponding environment variable.
 #[derive(Clone, Debug, Default)]
@@ -15,7 +16,7 @@ pub struct EnvironmentVariableDataBlock {
     pub target_ansi: Option<Vec<u8>>,
 
     /// An optional, NULL-terminated, Unicode string that specifies a path to environment variable information.
-    pub target_unicode: Option<Vec<u8>>,
+    pub target_unicode: Option<Vec<u16>>,
 }
 
 impl EnvironmentVariableDataBlock {
@@ -40,10 +41,55 @@ impl EnvironmentVariableDataBlock {
                 cursor
                     .read_exact(&mut target_unicode)
                     .map_err(ExtraDataError::Read)?;
-                Some(target_unicode)
+
+                let result = target_unicode
+                    .chunks_exact(2)
+                    .map(|chunks| u16::from_ne_bytes([chunks[0], chunks[1]]))
+                    .collect::<Vec<u16>>();
+
+                Some(result)
             },
         };
 
         Ok(this)
+    }
+
+    /// Attempt to parse the Target ANSI property to a valid string
+    pub fn target_ansi(&self) -> Result<String> {
+        let ansi = self
+            .target_ansi
+            .clone()
+            .ok_or_else(|| ExtraDataError::MissingStringData)?;
+
+        let first_null = ansi.iter().position(|c| c == &0x00);
+
+        let c_str = match first_null {
+            Some(pos) => String::from_utf8((&ansi[0..pos]).to_vec()),
+            None => String::from_utf8(ansi),
+        };
+
+        Ok(c_str
+            .map_err(|_| ExtraDataError::MissingStringData)?
+            .to_string())
+    }
+
+    /// Attempt to parse the Target Unicode property to a valid string
+    pub fn target_unicode(&self) -> Result<String> {
+        let unicode = self
+            .target_unicode
+            .clone()
+            .ok_or_else(|| ExtraDataError::MissingStringData)?;
+
+        let first_null = unicode.iter().position(|c| c == &0x0000);
+
+        let c_str = match first_null {
+            Some(pos) => U16Str::from_slice(&unicode[0..pos]).to_ustring(),
+            None => U16String::from_vec(unicode),
+        };
+
+        Ok(c_str
+            .to_string()
+            .map_err(|_| ExtraDataError::MissingStringData)?
+            .to_string())
     }
 }

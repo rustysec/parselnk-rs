@@ -213,7 +213,7 @@ impl LinkInfo {
         let begin = start_pos + self.common_path_suffix_offset as u64;
 
         if end_pos > begin {
-            Self::read_string(cursor, begin, end_pos - begin).ok()
+            Self::read_widestring(cursor, begin, end_pos - begin).ok()
         } else {
             None
         }

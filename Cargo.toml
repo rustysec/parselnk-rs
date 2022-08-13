@@ -1,6 +1,6 @@
 [package]
 name = "parselnk"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["rustysec <rustysec@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -20,7 +20,7 @@ bitflags = "1"
 byteorder = "1"
 chrono = { version = "0.4", optional = true }
 thiserror = "1"
-widestring = "0.4"
+widestring = "1"
 
 [features]
 default = [ "chrono" ]
